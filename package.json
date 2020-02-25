@@ -1,0 +1,30 @@
+{
+  "name": "@lachlandk/quasar",
+  "version": "0.0.1",
+  "description": "Mathematical utilities",
+  "main": "dist/node/quasar.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lachlandk/quasar.git"
+  },
+  "author": "Lachlan Dufort-Kennett",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lachlandk/quasar/issues"
+  },
+  "homepage": "https://github.com/lachlandk/quasar#readme",
+  "devDependencies": {
+    "del": "^5.1.0",
+    "gulp": "^4.0.2",
+    "gulp-inject": "^5.0.5",
+    "gulp-rename": "^2.0.0",
+    "gulp-strip-comments": "^2.5.2",
+    "gulp-uglify": "^3.0.2"
+  }
+}
