@@ -1,108 +1,105 @@
+	this.Node = function(type, value, properties) {
+		this.type = type;
+		this.value = value;
+		this.properties = {};
+		for (const property in properties) {
+			if (properties.hasOwnProperty(property)) {
+				this.properties[property] = properties[property];
+			}
+		}
+	};
+
+	this.Expression = function(){
+		this.tree = [];
+
+		this.append = function(node){
+			this.tree.unshift(node);
+		}
+	};
+
 	this.parse = function(input){
-		const lexemes = input.match(/\d+|sin|cos|tan|log|ln|root|sqrt|cbrt|{(?:alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|omicron|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|altsigma|varphi)}|\S/ig)
+		const lexemes = input.match(/\d+|\S/ig);
 		let tokens = [];
 		lexemes.forEach(function(lexeme, i){
-			if (lexeme.match(/sin|cos|tan|log|ln|root|sqrt|cbrt/)){
-				if (lexeme.match(/sin|cos|tan/) && lexemes[i+1] + lexemes[i+2] + lexemes[i+3] === "^-1"){
-					tokens.push({type: "function", value: "arc" + lexeme});
-					lexemes.splice(i+3, 1);
-					lexemes.splice(i+2, 1);
-					lexemes.splice(i+1, 1);
-				} else {
-					tokens.push({type: "function", value: lexeme})
-				}
-			} else
-			if (lexeme.match(/Alpha|Beta|Gamma|Delta|Epsilon|Zeta|Eta|Theta|Iota|Kappa|Lambda|Mu|Nu|Xi|Omicron|Rho|Tau|Upsilon|Phi|Chi|Psi|Omega/)){
-				tokens.push({type: "variable", value: lexeme.slice(1, lexeme.length - 1)})
-			} else
-			if (lexeme.match(/alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|omicron|rho|sigma|tau|upsilon|phi|chi|psi|omega|altsigma|[Vv]arphi|Sigma/)){
-				tokens.push({type: "variable", value: lexeme.toLowerCase().slice(1, lexeme.length - 1)})
-			} else
-			if (lexeme.match(/[Pp]i|[ei]/)){
-				tokens.push({type: "constant", value: lexeme.match(/[Pp]i|[ei]/g)[0].toLowerCase()})
-			} else
 			if (lexeme.match(/\d+/)){
-				tokens.push({type: "constant", value: parseInt(lexeme)})
+				tokens.push(new this.Node("constant", parseInt(lexeme)));
 			} else
 			if (lexeme.match(/[a-z]/i)){
-				tokens.push({type: "variable", value: lexeme})
+				tokens.push(new this.Node("variable", lexeme));
 			} else
 			if (lexeme.match(/[+\-*/^]/)){
 				if (lexeme.match(/\^/)){
-					tokens.push({type: "operator", value: "^", associativity: "right", precedence: 1})
+					tokens.push(new this.Node("operator", "^", {associativity: "right", precedence: 1}));
 				} else
 				if (lexeme.match(/[\/*]/)){
-					tokens.push({type: "operator", value: lexeme, associativity: "left", precedence: 2})
+					tokens.push(new this.Node("operator", lexeme, {associativity: "left", precedence: 2}));
 				} else
 				if (lexeme.match(/[+-]/)){
-					tokens.push({type: "operator", value: lexeme, associativity: "left",   precedence: 3})
+					tokens.push(new this.Node("operator", lexeme, {associativity: "left", precedence: 3}));
 				}
 			} else
-			if (lexeme.match(/[(\[]/)){
-				tokens.push({type: "open-parenthesis", value: lexeme})
+			if (lexeme.match(/\(/)){
+				tokens.push(new this.Node("open-parenthesis", "("));
 			} else
-			if (lexeme.match(/[)\]]/)){
-				tokens.push({type: "close-parenthesis", value: lexeme})
-			} else
-			if (lexeme.match(/,/)){
-				tokens.push({type: "delimiter", value: lexeme})
+			if (lexeme.match(/\)/)){
+				tokens.push(new this.Node("close-parenthesis", ")"));
 			} else {
 				throw {name: "LexingError", msg: "Unknown Token" + lexeme};
 			}
-		});
+		}, this);
 
 		for (let i=0; i<tokens.length; i++){
 			if (tokens[i].type === "function" && tokens[i+1].type !== "open-parenthesis" && (tokens[i+1].type === "variable" || tokens[i+1].type === "constant")){
-				tokens.splice(i+1, 0, {type: "open-parenthesis", value: "("});
-				tokens.splice(i+3, 0, {type: "close-parenthesis", value: ")"});
+				tokens.splice(i+1, 0, new this.Node("open-parenthesis", "("));
+				tokens.splice(i+3, 0, new this.Node("close-parenthesis", ")"));
 			}
 			if (i !== 0 && (tokens[i].type === "variable" || tokens[i].type === "constant" || tokens[i].type === "open-parenthesis" || tokens[i].type === "function")){
 				if (tokens[i-1].type === "variable" || tokens[i-1].type === "constant" || tokens[i-1].type === "close-parenthesis"){
-					tokens.splice(i, 0, {type: "operator", value: "*", associativity: "left", precedence: 2})
+					tokens.splice(i, 0, new this.Node("operator", "*", {associativity: "left", precedence: 2}));
 				}
 			} else
 			if (tokens[i].type === "operator"){
 				if (tokens[i].value.match(/[+-]/) && (i === 0 || tokens[i-1].type === "operator" || tokens[i-1].type === "open-parenthesis" || tokens[i-1].type === "delimiter")){
 					if (tokens[i].value === "-"){
-						tokens[i] = {type: "operator", value: "~", precedence: 0}
+						tokens[i] = new this.Node("operator", "~", {precedence: 0});
 					} else {
-						tokens.splice(i, 1)
+						tokens.splice(i, 1);
 					}
 				}
 			}
 		}
 
-		let output = [];
+		let output = new this.Expression();
 		let stack = [];
 		while (tokens.length !== 0){
 			let token = tokens.shift();
 			if (token.type === "constant" || token.type === "variable"){
-				output.push(token)
+				output.append(token)
 			} else
 			if (token.type === "function" || token.type === "open-parenthesis"){
 				stack.unshift(token)
 			} else
 			if (token.type === "delimiter" || token.type === "close-parenthesis"){
 				while (stack[0].type !== "open-parenthesis"){
-					output.push(stack.shift())
+					output.append(stack.shift())
 				}
 				if (token.type === "close-parenthesis"){
 					stack.shift();
 					if (stack.length !== 0 && stack[0].type === "function"){
-						output.push(stack.shift())
+						output.append(stack.shift())
 					}
 				}
 			} else
 			if (token.type === "operator"){
-				if (token.associativity === "left"){
-					while (stack.length !== 0 && stack[0].type === "operator" && stack[0].precedence <= token.precedence){
-						output.push(stack.shift())
+				if (token.properties.associativity === "left"){
+					while (stack.length !== 0 && stack[0].type === "operator" && stack[0].properties.precedence <= token.properties.precedence){
+						output.append(stack.shift())
 					}
 					stack.unshift(token)
 				} else
-				if (token.associativity === "right"){
-					while (stack.length !== 0 && stack[0].precedence < token.precedence){
-						output.push(stack.shift())
+				if (token.properties.associativity === "right"){
+					while (stack.length !== 0 && stack[0].properties.precedence < token.properties.precedence){
+						output.append(stack.shift())
 					}
 					stack.unshift(token)
 				} else {
@@ -111,7 +108,7 @@
 			}
 		}
 		while (stack.length !== 0){
-			output.push(stack.shift())
+			output.append(stack.shift())
 		}
 		return output
 	};
