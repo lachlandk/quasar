@@ -1,0 +1,9 @@
+# Intellij IDE Settings
+/.idea
+
+# Testing
+/tests
+
+# Git
+.gitattributes
+.gitignore
