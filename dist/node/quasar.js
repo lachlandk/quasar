@@ -1,27 +1,11 @@
 function Quasar(){
-	this.polynomialAdd = function(){
-
+	this.add = function(a, b){
+		const result = new this.Expression(new this.Node("operator", "+"));
+		result.root.left = a.root;
+		result.root.right = b.root;
+		return result
 	};
 
-	this.polynomialSubtract = function(){
-
-	};
-
-	this.polynomialMultiply = function(){
-
-	};
-
-	this.polynomialDivide = function(){
-
-	};
-
-	this.polynomialDerivative = function(){
-
-	};
-
-	this.polynomialIntegral = function(){
-
-	};
 
 	this.gcd = function(num1, num2){
 		let a = Math.max(Math.abs(num1), Math.abs(num2)),
@@ -74,6 +58,9 @@ function Quasar(){
 	this.parse = function(input){
 		const lexemes = input.match(/\d+|\S/ig);
 		const tokens = [];
+		if (!lexemes){
+			return new this.Expression();
+		}
 		lexemes.forEach(function(lexeme, i){
 			if (lexeme.match(/\d+/)){
 				tokens.push({type: "constant", value: parseInt(lexeme)});
@@ -92,14 +79,11 @@ function Quasar(){
 					tokens.push({type: "operator", value: lexeme, associativity: "left",   precedence: 3});
 				}
 			} else
-			if (lexeme.match(/[(\[]/)){
-				tokens.push({type: "open-parenthesis", value: lexeme});
+			if (lexeme.match(/\(/)){
+				tokens.push({type: "open-parenthesis", value: "("});
 			} else
-			if (lexeme.match(/[)\]]/)){
-				tokens.push({type: "close-parenthesis", value: lexeme});
-			} else
-			if (lexeme.match(/,/)){
-				tokens.push({type: "delimiter", value: lexeme});
+			if (lexeme.match(/\)/)){
+				tokens.push({type: "close-parenthesis", value: ")"});
 			} else {
 				throw {name: "LexingError", msg: "Unknown Token: " + lexeme};
 			}
@@ -112,12 +96,15 @@ function Quasar(){
 				}
 			} else
 			if (tokens[i].type === "operator"){
-				if (tokens[i].value.match(/[+-]/) && (i === 0 || tokens[i-1].type === "operator" || tokens[i-1].type === "open-parenthesis")){
-					if (tokens[i].value === "-"){
+				if (tokens[i].value.match(/[+-]/) && (i === 0 || tokens[i-1].type === "operator" || tokens[i-1].type === "open-parenthesis")) {
+					if (tokens[i].value === "-") {
 						tokens[i] = {type: "operator", value: "~", precedence: 0};
-					} else {
+					} else if (tokens[i].value === "+") {
 						tokens.splice(i, 1);
 					}
+				}
+				if (tokens[i] && tokens[i].value.match(/[/*-+^]/) && ((tokens[i-1] && tokens[i-1].type === "operator") || !tokens[i-1] || !tokens[i+1])){
+					throw {name: "ParsingError", msg: "Invalid operands for operator: " + tokens[i].value};
 				}
 			}
 		}
@@ -135,6 +122,9 @@ function Quasar(){
 			if (token.type === "close-parenthesis"){
 				while (stack[0].type !== "open-parenthesis"){
 					output.push(stack.shift());
+					if (stack.length === 0){
+						throw {name: "ParsingError", msg: "Mismatched delimiter: )"};
+					}
 				}
 				stack.shift();
 			} else
@@ -156,8 +146,14 @@ function Quasar(){
 			}
 		}
 		while (stack.length !== 0){
+			if (stack[0].type === "open-parenthesis"){
+				throw {name: "ParsingError", msg: "Mismatched delimiter: )"};
+			}
 			output.push(stack.shift());
 		}
+
+		return output
+
 
 		output.forEach(function(token, i){
 			if (token.type === "variable" || token.type === "constant"){

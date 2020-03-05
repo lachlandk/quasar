@@ -12,6 +12,9 @@
 	this.parse = function(input){
 		const lexemes = input.match(/\d+|\S/ig);
 		const tokens = [];
+		if (!lexemes){
+			return new this.Expression();
+		}
 		lexemes.forEach(function(lexeme, i){
 			if (lexeme.match(/\d+/)){
 				tokens.push({type: "constant", value: parseInt(lexeme)});
@@ -30,14 +33,11 @@
 					tokens.push({type: "operator", value: lexeme, associativity: "left",   precedence: 3});
 				}
 			} else
-			if (lexeme.match(/[(\[]/)){
-				tokens.push({type: "open-parenthesis", value: lexeme});
+			if (lexeme.match(/\(/)){
+				tokens.push({type: "open-parenthesis", value: "("});
 			} else
-			if (lexeme.match(/[)\]]/)){
-				tokens.push({type: "close-parenthesis", value: lexeme});
-			} else
-			if (lexeme.match(/,/)){
-				tokens.push({type: "delimiter", value: lexeme});
+			if (lexeme.match(/\)/)){
+				tokens.push({type: "close-parenthesis", value: ")"});
 			} else {
 				throw {name: "LexingError", msg: "Unknown Token: " + lexeme};
 			}
@@ -51,12 +51,15 @@
 				}
 			} else
 			if (tokens[i].type === "operator"){
-				if (tokens[i].value.match(/[+-]/) && (i === 0 || tokens[i-1].type === "operator" || tokens[i-1].type === "open-parenthesis")){
-					if (tokens[i].value === "-"){
+				if (tokens[i].value.match(/[+-]/) && (i === 0 || tokens[i-1].type === "operator" || tokens[i-1].type === "open-parenthesis")) {
+					if (tokens[i].value === "-") {
 						tokens[i] = {type: "operator", value: "~", precedence: 0};
-					} else {
+					} else if (tokens[i].value === "+") {
 						tokens.splice(i, 1);
 					}
+				}
+				if (tokens[i] && tokens[i].value.match(/[/*-+^]/) && ((tokens[i-1] && tokens[i-1].type === "operator") || !tokens[i-1] || !tokens[i+1])){
+					throw {name: "ParsingError", msg: "Invalid operands for operator: " + tokens[i].value};
 				}
 			}
 		}
@@ -74,6 +77,9 @@
 			if (token.type === "close-parenthesis"){
 				while (stack[0].type !== "open-parenthesis"){
 					output.push(stack.shift());
+					if (stack.length === 0){
+						throw {name: "ParsingError", msg: "Mismatched delimiter: )"};
+					}
 				}
 				stack.shift();
 			} else
@@ -95,9 +101,17 @@
 			}
 		}
 		while (stack.length !== 0){
+			if (stack[0].type === "open-parenthesis"){
+				throw {name: "ParsingError", msg: "Mismatched delimiter: )"};
+			}
 			output.push(stack.shift());
 		}
 
+		return output
+
+		// semantic analysis
+
+		// convert to binary tree
 		output.forEach(function(token, i){
 			if (token.type === "variable" || token.type === "constant"){
 				stack.unshift(new this.Node(token.type, token.value));
