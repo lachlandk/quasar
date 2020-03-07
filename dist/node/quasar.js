@@ -44,15 +44,20 @@ function Quasar(){
 		return Math.abs(num1 * num2) / this.gcd(num1, num2);
 	};
 
-	this.Node = function(type, value){
+	this.Node = function(type, value, properties){
 		this.type = type;
 		this.value = value;
+		this.properties = {};
+		for (const property in properties){
+			this.properties[property] = properties[property];
+		}
 		this.left = null;
 		this.right = null;
 	};
 
 	this.Expression = function(root=null){
 		this.root = root;
+
 	};
 
 	this.parse = function(input){
@@ -96,6 +101,10 @@ function Quasar(){
 				}
 			} else
 			if (tokens[i].type === "operator"){
+				if (tokens[i].value === "-" && tokens[i+1] && tokens[i+1].value === "-"){
+					tokens[i] = {type: "operator", value: "+", associativity: "left", precedence: 3};
+					tokens.splice(i+1, 1);
+				}
 				if (tokens[i].value.match(/[+-]/) && (i === 0 || tokens[i-1].type === "operator" || tokens[i-1].type === "open-parenthesis")) {
 					if (tokens[i].value === "-") {
 						tokens[i] = {type: "operator", value: "~", precedence: 0};
@@ -152,9 +161,6 @@ function Quasar(){
 			output.push(stack.shift());
 		}
 
-		return output
-
-
 		output.forEach(function(token, i){
 			if (token.type === "variable" || token.type === "constant"){
 				stack.unshift(new this.Node(token.type, token.value));
@@ -173,7 +179,34 @@ function Quasar(){
 			}
 		}, this);
 
-		return new this.Expression(stack[0])
+		const expression = new this.Expression(stack[0]);
+		function analyse(node, Quasar){
+			if (!node || node.type !== "operator"){
+				return;
+			}
+			analyse(node.left, Quasar);
+			analyse(node.right, Quasar);
+			if (node.value === "^" && node.left.type === "variable" && node.right.type === "constant"){
+				node.type = "variable";
+				node.value = node.left.value;
+				node.properties.coefficient = 1;
+				node.properties.power = node.right.value;
+				node.left = null;
+				node.right = null;
+			}
+			if (node.value === "*" && node.left.type === "constant" && node.right.type === "variable"){
+				node.type = "variable";
+				node.value = node.right.value;
+				node.properties.coefficient = node.left.value;
+				node.properties.power = node.right.properties.power ? node.right.properties.power : 1;
+				node.left = null;
+				node.right = null;
+			}
+		}
+		analyse(expression.root, this);
+
+
+		return expression;
 	};
 
 }
