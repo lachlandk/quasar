@@ -204,6 +204,14 @@
 				node.left = null;
 				node.right = null;
 			}
+			if (node.value === "*" && (node.left.type === "variable" || node.left.type === "operator") && (node.right.type === "variable" || node.right.type === "operator")){
+				node.type = "expression";
+				node.value = new Quasar.Expression(new Quasar.Node("operator", "*"));
+				node.value.left = node.left;
+				node.value.right = node.right;
+				node.left = null;
+				node.right = null;
+			}
 		}
 		analyse(expression.root, this);
 
