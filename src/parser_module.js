@@ -146,8 +146,8 @@
 			}
 			analyse(node.left, Quasar);
 			analyse(node.right, Quasar);
-			if (node.value.match(/[\^/*]/)){
-				if (node.right.type === "operator" && node.right.value !== "~"){
+			if (node.value.match(/[\^/*~]/)){
+				if (node.value !== "~" && node.right.type === "operator"){
 					node.right.type = "expression";
 					node.right.value = new Quasar.Expression(new Quasar.Node("operator", node.right.value));
 					node.right.value.root.left = node.right.left;
@@ -155,7 +155,7 @@
 					node.right.left = null;
 					node.right.right = null;
 				}
-				if (node.left.type === "operator" && node.left.value !== "~"){
+				if (node.left.type === "operator"){
 					node.left.type = "expression";
 					node.left.value = new Quasar.Expression(new Quasar.Node("operator", node.left.value));
 					node.left.value.root.left = node.left.left;
@@ -164,27 +164,19 @@
 					node.left.right = null;
 				}
 			}
-			if (node.value === "~" && node.left.type === "operator"){
-				node.left.type = "expression";
-				node.left.value = new Quasar.Expression(new Quasar.Node("operator", node.left.value));
-				node.left.value.root.left = node.left.left;
-				node.left.value.root.right = node.left.right;
-				node.left.left = null;
-				node.left.right = null;
-			}
-			if (node.value === "^" && node.left.type === "variable" && node.right.type === "constant"){
+			if (node.value === "^" && node.left.type === "variable" && (node.right.type === "constant" || node.right.type === "variable" || node.right.type === "expression")){
 				node.type = "variable";
 				node.value = node.left.value;
-				node.properties.coefficient = 1;
-				node.properties.power = node.right.value;
+				node.properties.coefficient = new Quasar.Node("constant", 1);
+				node.properties.power = node.right;
 				node.left = null;
 				node.right = null;
 			}
-			if (node.value === "*" && node.left.type === "constant" && node.right.type === "variable"){
+			if (node.value === "*" && node.left.type === "constant" && (node.right.type === "constant" || node.right.type === "variable" || node.right.type === "expression")){
 				node.type = "variable";
 				node.value = node.right.value;
-				node.properties.coefficient = node.left.value;
-				node.properties.power = node.right.properties.power ? node.right.properties.power : 1;
+				node.properties.coefficient = node.left;
+				node.right.properties.power ? node.properties.power = node.right.properties.power : null;
 				node.left = null;
 				node.right = null;
 			}
