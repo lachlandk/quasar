@@ -146,6 +146,32 @@
 			}
 			analyse(node.left, Quasar);
 			analyse(node.right, Quasar);
+			if (node.value.match(/[\^/*]/)){
+				if (node.right.type === "operator" && node.right.value !== "~"){
+					node.right.type = "expression";
+					node.right.value = new Quasar.Expression(new Quasar.Node("operator", node.right.value));
+					node.right.value.root.left = node.right.left;
+					node.right.value.root.right = node.right.right;
+					node.right.left = null;
+					node.right.right = null;
+				}
+				if (node.left.type === "operator" && node.left.value !== "~"){
+					node.left.type = "expression";
+					node.left.value = new Quasar.Expression(new Quasar.Node("operator", node.left.value));
+					node.left.value.root.left = node.left.left;
+					node.left.value.root.right = node.left.right;
+					node.left.left = null;
+					node.left.right = null;
+				}
+			}
+			if (node.value === "~" && node.left.type === "operator"){
+				node.left.type = "expression";
+				node.left.value = new Quasar.Expression(new Quasar.Node("operator", node.left.value));
+				node.left.value.root.left = node.left.left;
+				node.left.value.root.right = node.left.right;
+				node.left.left = null;
+				node.left.right = null;
+			}
 			if (node.value === "^" && node.left.type === "variable" && node.right.type === "constant"){
 				node.type = "variable";
 				node.value = node.left.value;
@@ -162,22 +188,9 @@
 				node.left = null;
 				node.right = null;
 			}
-			if (node.value.match(/[\^/*]/) && (node.left.type === "variable" || node.left.type === "operator") && (node.right.type === "variable" || node.right.type === "operator")){
-				node.type = "expression";
-				node.value = new Quasar.Expression(new Quasar.Node("operator", node.value));
-				node.value.root.left = node.left;
-				node.value.root.right = node.right;
-				node.left = null;
-				node.right = null;
-			}
-			if (node.value === "~" && node.left.type === "operator"){
-				node.type = "expression";
-				node.value = new Quasar.Expression(new Quasar.Node("operator", "~"));
-				node.value.root.left = node.left;
-				node.left = null;
-			}
-			// if (node.type === "expression"){
-			// 	analyse(node.value.root, Quasar);
+			// if (node.type === "expression" && !node.properties.analysed){
+			// 	analyse(node.value.root.left, Quasar);
+			// 	analyse(node.value.root.right, Quasar);
 			// }
 		}
 		analyse(expression.root, this);
