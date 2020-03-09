@@ -204,8 +204,8 @@ function Quasar(){
 					node.left.right = null;
 				}
 			}
-			if (node.value === "^" && node.left.type === "variable" && (node.right.type === "constant" || node.right.type === "variable" || node.right.type === "expression")){
-				node.type = "variable";
+			if (node.value === "^" && (node.left.type === "variable" || node.left.type === "expression") && (node.right.type === "constant" || node.right.type === "variable" || node.right.type === "expression")){
+				node.type = node.left.type;
 				node.value = node.left.value;
 				node.properties.coefficient = new Quasar.Node("constant", 1);
 				node.properties.power = node.right;
@@ -213,7 +213,7 @@ function Quasar(){
 				node.right = null;
 			}
 			if (node.value === "*" && node.left.type === "constant" && (node.right.type === "constant" || node.right.type === "variable" || node.right.type === "expression")){
-				node.type = "variable";
+				node.type = node.right.type;
 				node.value = node.right.value;
 				node.properties.coefficient = node.left;
 				node.right.properties.power ? node.properties.power = node.right.properties.power : null;
