@@ -71,6 +71,7 @@
 				}
 				if (tokens[i] && tokens[i].value.match(/[/*-+^]/) && ((tokens[i-1] && tokens[i-1].type === "operator") || !tokens[i-1] || !tokens[i+1])){
 					throw {name: "ParsingError", msg: "Invalid operands for operator: " + tokens[i].value};
+					// TODO: not working "x(x+)"
 				}
 			}
 		}
@@ -161,14 +162,23 @@
 				node.left = null;
 				node.right = null;
 			}
-			if (node.value === "*" && (node.left.type === "variable" || node.left.type === "operator") && (node.right.type === "variable" || node.right.type === "operator")){
+			if (node.value.match(/[\^/*]/) && (node.left.type === "variable" || node.left.type === "operator") && (node.right.type === "variable" || node.right.type === "operator")){
 				node.type = "expression";
-				node.value = new Quasar.Expression(new Quasar.Node("operator", "*"));
-				node.value.left = node.left;
-				node.value.right = node.right;
+				node.value = new Quasar.Expression(new Quasar.Node("operator", node.value));
+				node.value.root.left = node.left;
+				node.value.root.right = node.right;
 				node.left = null;
 				node.right = null;
 			}
+			if (node.value === "~" && node.left.type === "operator"){
+				node.type = "expression";
+				node.value = new Quasar.Expression(new Quasar.Node("operator", "~"));
+				node.value.root.left = node.left;
+				node.left = null;
+			}
+			// if (node.type === "expression"){
+			// 	analyse(node.value.root, Quasar);
+			// }
 		}
 		analyse(expression.root, this);
 
