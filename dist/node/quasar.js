@@ -58,6 +58,49 @@ function Quasar(){
 	this.Expression = function(root=null){
 		this.root = root;
 
+
+		this.output = function(substring=false){
+			let output = "";
+			function infix(node) {
+				if (node){
+					if (node.type === "operator"){
+						infix(node.left);
+						output += node.value;
+						infix(node.right);
+					} else {
+						if (node.properties.coefficient && node.properties.coefficient.value !== 1){
+							output += node.properties.coefficient.value;
+						}
+						if (node.type === "expression"){
+							output += "\\left(";
+						}
+						if (node.type === "expression"){
+							output += node.value.output(true);
+						} else {
+							output += node.value;
+						}
+						if (node.type === "expression"){
+							output += "\\right)";
+						}
+						if (node.properties.power){
+							output += "^{";
+							if (node.properties.power.type === "expression"){
+								output += node.properties.power.value.output(true);
+							} else {
+								output += node.properties.power.value;
+							}
+							output += "}";
+						}
+					}
+				}
+			}
+			infix(this.root);
+			if (substring){
+				return output;
+			} else {
+				return "\\[" + output + "\\]";
+			}
+		};
 	};
 
 	this.parse = function(input){
@@ -66,7 +109,7 @@ function Quasar(){
 		if (!lexemes){
 			return new this.Expression();
 		}
-		lexemes.forEach(function(lexeme, i){
+		lexemes.forEach(function(lexeme){
 			if (lexeme.match(/\d+/)){
 				tokens.push({type: "constant", value: parseInt(lexeme)});
 			} else
@@ -161,7 +204,7 @@ function Quasar(){
 			output.push(stack.shift());
 		}
 
-		output.forEach(function(token, i){
+		output.forEach(function(token){
 			if (token.type === "variable" || token.type === "constant"){
 				stack.unshift(new this.Node(token.type, token.value));
 			} else
@@ -212,7 +255,7 @@ function Quasar(){
 				node.left = null;
 				node.right = null;
 			}
-			if (node.value === "*" && node.left.type === "constant" && (node.right.type === "constant" || node.right.type === "variable" || node.right.type === "expression")){
+			if (node.value === "*" && node.left && node.left.type === "constant" && node.right && (node.right.type === "constant" || node.right.type === "variable" || node.right.type === "expression")){
 				node.type = node.right.type;
 				node.value = node.right.value;
 				node.properties.coefficient = node.left;
