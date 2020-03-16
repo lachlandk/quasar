@@ -6,6 +6,12 @@ const inject = require("gulp-inject");
 const del = require("del");
 const composer = require("gulp-uglify/composer");
 const minify = composer(uglify, console);
+const modules = [
+	"src/parser_module.js",
+	"src/arithmetic_module.js",
+	"src/random_module.js",
+	"src/number_theory_module.js"
+]
 
 async function clean(){
 	const paths = await del(["dist/node/**", "dist/web/**"])
@@ -14,7 +20,7 @@ async function clean(){
 
 function nodeify(){
 	return gulp.src("templates/node.js")
-		.pipe(inject(gulp.src("src/*.js"), {
+		.pipe(inject(gulp.src(modules), {
 			starttag: "/* inject:js */",
 			endtag: "/* endinject */",
 			transform: function(filepath, file){
@@ -28,7 +34,7 @@ function nodeify(){
 
 function webify(){
 	return gulp.src("templates/web.js")
-		.pipe(inject(gulp.src("src/*.js"), {
+		.pipe(inject(gulp.src(modules), {
 			starttag: "/* inject:js */",
 			endtag: "/* endinject */",
 			transform: function(filepath, file){
