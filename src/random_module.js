@@ -1,15 +1,7 @@
-	this.randomNumber = function(start=0, end=10){
-		return Math.round(Math.random()*(end-start) + start);
+	this.randomNumber = function(max=10, min=0){
+		return Math.round(Math.random()*(max - min) + min);
 	}
 
-	// this.randomPolynomialExp = function(){
-	//
-	// };
-	//
-	// this.randomRationalExp = function(){
-	//
-	// };
-	//
-	// this.randomTranscendExp = function(){
-	//
-	// };
+	this.randomPolynomialExp = function(){
+
+	};
