@@ -1,52 +1,92 @@
-const gulp = require("gulp");
-const rename = require("gulp-rename");
-const uglify = require("uglify-es");
-const strip = require("gulp-strip-comments");
-const inject = require("gulp-inject");
-const del = require("del");
-const composer = require("gulp-uglify/composer");
-const minify = composer(uglify, console);
-const modules = [
-	"src/parser_module.js",
-	"src/arithmetic_module.js",
-	"src/random_module.js",
-	"src/number_theory_module.js"
-]
+import gulp from "gulp";
+import del from "del";
+import typescriptGulp from "gulp-typescript";
+import typescriptRollup from "rollup-plugin-typescript2";
+import { rollup } from "rollup";
+import merge from "merge2";
+import typedoc from "gulp-typedoc";
+import strip from "gulp-strip-comments";
+import terser from "gulp-terser";
+import rename from "gulp-rename";
 
-async function clean(){
-	const paths = await del(["dist/node/**", "dist/web/**"])
-	console.log("Deleted old files/directories:\n", paths.join("\n"));
+function cleanBuild() {
+	return del(["build/**"]);
 }
 
-function nodeify(){
-	return gulp.src("templates/node.js")
-		.pipe(inject(gulp.src(modules), {
-			starttag: "/* inject:js */",
-			endtag: "/* endinject */",
-			transform: function(filepath, file){
-				return file.contents.toString("utf-8");
-			}
+async function buildES() {
+	const result = gulp.src("src/**/*.ts")
+		.pipe(typescriptGulp.createProject("tsconfig.json", {
+			declaration: true
+		})());
+	return merge([
+		result.dts.pipe(gulp.dest("build/types")),
+		result.js.pipe(gulp.dest("build/quasar"))
+	]);
+}
+
+function buildIIFE() {
+	return rollup({
+		input: "src/index.ts",
+		plugins: [
+			typescriptRollup({
+				tsconfig: "tsconfig.json",
+				tsconfigOverride: {
+					compilerOptions: {
+						declaration: false,
+					}
+				},
+				check: false
+			})
+		]
+	}).then(bundle => bundle.write({
+		file: "./build/quasar-web.js",
+		format: "iife",
+		name: "Quasar"
+	}));
+}
+
+export const build = gulp.series(cleanBuild, buildES, buildIIFE);
+
+export function watch() {
+	return gulp.watch("src/**/*.ts", build);
+}
+
+function cleanDist() {
+	return del(["dist/**"]);
+}
+
+function distES() {
+	return gulp.src("build/quasar/**/*.js")
+		.pipe(gulp.dest("dist/quasar"));
+}
+
+function distTypes() {
+	return gulp.src("build/types/**/*.d.ts")
+		.pipe(gulp.dest("dist/types"));
+}
+
+function distIIFE() {
+	return gulp.src("build/quasar-web.js")
+		.pipe(strip({
+			safe: true
 		}))
-		.pipe(strip())
-		.pipe(rename("quasar.js"))
-		.pipe(gulp.dest("dist/node/"));
-}
-
-function webify(){
-	return gulp.src("templates/web.js")
-		.pipe(inject(gulp.src(modules), {
-			starttag: "/* inject:js */",
-			endtag: "/* endinject */",
-			transform: function(filepath, file){
-				return file.contents.toString("utf-8");
-			}
+		.pipe(gulp.dest("dist"))
+		.pipe(terser())
+		.pipe(rename({
+			extname: ".min.js"
 		}))
-		.pipe(strip())
-		.pipe(rename("quasar-web.js"))
-		.pipe(gulp.dest("dist/web/"))
-		.pipe(minify())
-		.pipe(rename({extname: ".min.js"}))
-		.pipe(gulp.dest("dist/web/"));
+		.pipe(gulp.dest("dist"));
 }
 
-exports.build = gulp.series(clean, nodeify, webify);
+export const dist = gulp.series(cleanDist, distES, distTypes, distIIFE);
+
+export function docs() {
+	return gulp.src("src/quasar.ts")
+		.pipe(typedoc({
+			name: "Quasar",
+			out: "docs/typedoc",
+			json: "docs/typedoc.json",
+			sort: ["static-first", "source-order"],
+			excludeProtected: true
+		}));
+}

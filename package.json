@@ -1,32 +1,53 @@
 {
   "name": "@lachlandk/quasar",
-  "version": "0.0.1",
-  "description": "Mathematical utilities",
-  "main": "dist/node/quasar.js",
-  "directories": {
-    "test": "tests"
+  "version": "0.0.3",
+  "description": "A javascript mathematical toolkit",
+  "main": "dist/quasar/index.js",
+  "module": "dist/quasar/index.js",
+  "types": "dist/types/index.d.ts",
+  "type": "module",
+  "sideEffects": false,
+  "dependencies": {
+    "@lachlandk/trees": "^0.1.1"
+  },
+  "devDependencies": {
+    "c8": "^7.7.3",
+    "chai": "^4.3.4",
+    "del": "^6.0.0",
+    "gulp": "^4.0.2",
+    "gulp-rename": "^2.0.0",
+    "gulp-strip-comments": "^2.5.2",
+    "gulp-terser": "^2.0.1",
+    "gulp-typedoc": "^3.0.1",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "jsdoc": "^3.6.7",
+    "jsdom": "^16.6.0",
+    "merge2": "^1.4.1",
+    "mocha": "^9.0.2",
+    "rollup": "^2.53.2",
+    "rollup-plugin-typescript2": "^0.30.0",
+    "sinon": "^11.1.1",
+    "tslib": "^2.3.0",
+    "typedoc": "^0.21.4",
+    "typescript": "^4.3.5"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "c8 mocha \"./tests/**/*.js\""
+  },
+  "c8": {
+    "all": true,
+    "include": [
+      "build/quasar/**"
+    ]
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lachlandk/quasar.git"
   },
   "author": "Lachlan Dufort-Kennett",
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/lachlandk/quasar/issues"
   },
-  "homepage": "https://github.com/lachlandk/quasar#readme",
-  "devDependencies": {
-    "del": "^5.1.0",
-    "gulp": "^4.0.2",
-    "gulp-inject": "^5.0.5",
-    "gulp-rename": "^2.0.0",
-    "gulp-strip-comments": "^2.5.2",
-    "gulp-uglify": "^3.0.2",
-    "uglify-es": "^3.3.9"
-  },
-  "dependencies": {}
+  "homepage": "https://github.com/lachlandk/quasar#readme"
 }
