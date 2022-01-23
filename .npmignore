@@ -1,8 +1,19 @@
 # Intellij IDE Settings
 /.idea
 
+# Development
+.jshintrc
+tsconfig.json
+gulpfile.js
+/src
+/build
+
 # Testing
 /tests
+/coverage
+
+# Docs
+/docs
 
 # Git
 .gitattributes

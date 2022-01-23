@@ -1,2 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+tests/** linguist-vendored
+build/** linguist-vendored
+dist/** linguist-vendored
+gulpfile.js linguist-vendored
