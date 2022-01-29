@@ -20,7 +20,7 @@ export class NDArray {
         this.itemSize = 8;  // float64
 
         if (!shape.every((size) => Number.isInteger(size))) throw `Error: Size of array dimensions must be integer`;  // TODO: proper errors
-        if (Array.isArray(strides) && !strides.every((stride) => Number.isInteger(stride))) throw `Error: Size of array strides must be integer`;
+        if (Array.isArray(strides) && !strides.every((stride) => Number.isInteger(stride / this.itemSize))) throw `Error: Size of array strides must be integer multiple of itemSize`;
         if (!Number.isInteger(offset / this.itemSize)) throw `Error: Array offset multiple of itemSize`;
 
         // calculate data size and dimension
@@ -41,12 +41,7 @@ export class NDArray {
         if (strides.length === 0) {
             this.strides = this.shape.map((_, i) => this.shape.slice(i + 1).reduce((acc, curr) => acc * curr, this.itemSize));
         } else {
-            const baseStrides = this.shape.map((_, i) => this.shape.slice(i + 1).reduce((acc, curr) => acc * curr, this.itemSize));
-            if (strides.every((stride, i) => Number.isInteger(stride / baseStrides[i]))) {
-                this.strides = strides;
-            } else {
-                throw `Error: Incompatible stride lengths for array of this shape`;
-            }
+            this.strides = strides;
         }
 
         return new Proxy(this, {
@@ -60,6 +55,10 @@ export class NDArray {
 
     set(value: number, ...indices: number[]) {
         this.data.setFloat64(this.strides.reduce((acc, curr, i) => acc + curr * indices[i], 0), value);
+    }
+
+    transpose() {
+        return new NDArray(this.shape.reverse(), "float64", this.data.buffer, 0, this.strides.reverse());
     }
 
     toString(): string {
