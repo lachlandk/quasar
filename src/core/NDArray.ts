@@ -21,7 +21,7 @@ export class NDArray {
 
         if (!shape.every((size) => Number.isInteger(size))) throw `Error: Size of array dimensions must be integer`;  // TODO: proper errors
         if (Array.isArray(strides) && !strides.every((stride) => Number.isInteger(stride / this.itemSize))) throw `Error: Size of array strides must be integer multiple of itemSize`;
-        if (!Number.isInteger(offset / this.itemSize)) throw `Error: Array offset multiple of itemSize`;
+        if (!Number.isInteger(offset / this.itemSize)) throw `Error: Array offset must be multiple of itemSize`;
 
         // calculate data size and dimension
         this.shape = shape;
@@ -29,11 +29,9 @@ export class NDArray {
         this.byteLength = this.size * this.itemSize;
         this.dimension = this.shape.length;
 
-        // initialise buffer or check shape is compatible
+        // initialise buffer
         if (buffer === undefined) {
             buffer = new ArrayBuffer(this.byteLength);
-        } else if (!Number.isInteger(buffer.byteLength / this.byteLength)) {
-            throw `Error: Incompatible shape for array of this length`;
         }
         this.data = new DataView(buffer, offset);
 
@@ -50,11 +48,43 @@ export class NDArray {
     }
 
     get(...indices: number[]): number {
+        // TODO: allows illegal indices
         return this.data.getFloat64(this.strides.reduce((acc, curr, i) => acc + curr * indices[i], 0));
     }
 
     set(value: number, ...indices: number[]) {
+        // TODO: allows illegal indices
         this.data.setFloat64(this.strides.reduce((acc, curr, i) => acc + curr * indices[i], 0), value);
+    }
+
+    slice(...axes: [number, number, number][]): NDArray {  // [start, end, step]
+
+        // check that passed indices are valid
+        axes.forEach(ax => {
+            if (ax[1] <= ax[0]) throw `Error: stop index cannot be higher than or equal to start index`;
+            if (ax[2] === 0) throw `Error: step cannot be 0`;
+        });
+
+        // pad out axes list
+        for (let i=axes.length; i<this.shape.length; i++) {
+            axes.push([0, this.shape[i], 1]);
+        }
+
+        // set shape and strides
+        const shape = [...this.shape];
+        const strides = [...this.strides];  // strides don't change unless step is different
+        for (let i=0; i<strides.length; i++) {
+            strides[i] *= axes[i][2];
+            shape[i] = Math.ceil((axes[i][1] - axes[i][0]) / (axes[i][2]));
+        }
+
+        // set initial offset
+        const offset = axes.reduce((acc, curr, i) => {
+            return acc + (curr[0] * this.strides[i]);
+        }, 0);
+
+        // return view
+        return new NDArray(shape, "float64", this.data.buffer, offset, strides);
     }
 
     transpose() {
@@ -75,19 +105,21 @@ export class NDArray {
                 }
                 string += this.get(...currentIndex);
             } else {
-                if (this.shape[axis] > 1) {
-                    for (let i=0; i<this.shape[axis] - 1; i++) {
-                        string += arrayToString(axis + 1);
-                        string += ",\n";
-                        string += " ".repeat(axis + 1);
-                        currentIndex[axis] += 1;
-                    }
+                for (let i=0; i<this.shape[axis] - 1; i++) {
                     string += arrayToString(axis + 1);
+                    string += ",\n";
+                    string += " ".repeat(axis + 1);
+                    currentIndex[axis] += 1;
                 }
+                string += arrayToString(axis + 1);
             }
             string += "]";
             return string;
         }
         return arrayToString(0);
     }
+}
+
+export function array() {
+
 }
