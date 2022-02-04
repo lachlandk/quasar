@@ -90,6 +90,8 @@ export class NDArray {
         // check that passed indices are valid
         axes.forEach((ax, i) => {
             if (!(Number.isInteger(ax[0]) && Number.isInteger(ax[1]) && Number.isInteger(ax[2]))) throw `Error: Indices must be integers`;
+            if (ax[0] < 0) ax[0] += this.shape[i];
+            if (ax[1] < 0) ax[1] += this.shape[i];
             if (!(ax[0] < this.shape[i] && ax[1] <= this.shape[i])) throw `Error: Index out of bounds`;
             if (ax[1] <= ax[0]) throw `Error: stop index cannot be higher than or equal to start index`;
             if (ax[2] === 0) throw `Error: step cannot be 0`;
