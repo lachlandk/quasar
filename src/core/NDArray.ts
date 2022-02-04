@@ -1,6 +1,8 @@
 type dtype = "float64"
 
 export class NDArray {
+    [key: string | symbol]: unknown;
+
     data: DataView
     dtype: dtype
     size: number
@@ -43,17 +45,41 @@ export class NDArray {
         }
 
         return new Proxy(this, {
-
+            get(target, prop) {
+                if (typeof prop === "string" && /\d+/.test(prop)) {
+                    const axes = prop.split(",");
+                    if (axes.length <= target.dimension) {  // implement recursive definition instead of this?
+                        if (/:/.test(prop)) {
+                            const slices: (string | number)[][] = axes.map(ax => ax.split(":"));
+                            if (slices.every(slice => slice.length <= 3)) {
+                                for (let i=0; i<slices.length; i++) {
+                                    slices[i][0] = slices[i][0] === "" ? 0 : Number(slices[i][0]);
+                                    if (slices[i][0] && slices[i][1] === undefined) throw `Error: Extracting single subarray not supported yet`;
+                                    slices[i][1] = slices[i][1] === "" || slices[i][1] === undefined ? target.shape[i] : Number(slices[i][1]);
+                                    slices[i][2] = slices[i][2] === "" || slices[i][2] === undefined ? 1 : Number(slices[i][2]);
+                                }
+                                return target.slice(...slices as [number, number, number][]);
+                            }
+                        } else {
+                            const indices = axes.map(ax => Number(ax));
+                            return target.get(...indices);
+                        }
+                    }
+                }
+                return target[prop];
+            }
         });
     }
 
     get(...indices: number[]): number {
+        // TODO: allow omitting indices to extract subarray
         indices.fill(0, indices.length, this.dimension);
         if (!indices.every((index, i) => index < this.shape[i])) throw `Error: Index out of bounds`;
         return this.data.getFloat64(this.strides.reduce((acc, curr, i) => acc + curr * indices[i], 0));
     }
 
     set(value: number, ...indices: number[]) {
+        // TODO: check number of indices passed
         indices.fill(0, indices.length, this.dimension);
         if (!indices.every((index, i) => index < this.shape[i])) throw `Error: Index out of bounds`;
         this.data.setFloat64(this.strides.reduce((acc, curr, i) => acc + curr * indices[i], 0), value);
