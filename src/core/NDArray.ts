@@ -67,6 +67,18 @@ export class NDArray {
                     }
                 }
                 return target[prop];
+            },
+
+            set(target, prop, value) {
+                if (typeof prop === "string" && /\d+/.test(prop)) {
+                    const axes = prop.split(",");
+                    if (axes.length <= target.dimension) {
+                        const indices = axes.map(ax => Number(ax));
+                        target.set(value, ...indices);
+                        return true;
+                    }
+                }
+                return false;
             }
         });
     }
