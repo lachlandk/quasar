@@ -91,9 +91,9 @@ export class NDArray {
     }
 
     set(value: number, ...indices: number[]) {
-        // TODO: check number of indices passed
-        indices.fill(0, indices.length, this.dimension);
-        if (!indices.every((index, i) => index < this.shape[i])) throw `Error: Index out of bounds`;
+        if (indices.length !== this.dimension) {
+            throw `Error: Incorrect number of indices passed`;
+        }
         this.data.setFloat64(this.strides.reduce((acc, curr, i) => acc + curr * indices[i], 0), value);
     }
 
@@ -163,8 +163,4 @@ export class NDArray {
         }
         return arrayToString(0);
     }
-}
-
-export function array() {
-
 }
