@@ -83,16 +83,21 @@ export class NDArray {
         });
     }
 
-    get(...indices: number[]): number {
-        // TODO: allow omitting indices to extract subarray
-        indices.fill(0, indices.length, this.dimension);
-        if (!indices.every((index, i) => index < this.shape[i])) throw `Error: Index out of bounds`;
-        return this.data.getFloat64(this.strides.reduce((acc, curr, i) => acc + curr * indices[i], 0));
+    get(...indices: number[]): number | NDArray {
+        if (indices.length === this.dimension) {
+            return this.data.getFloat64(this.strides.reduce((acc, curr, i) => acc + curr * indices[i], 0));
+        } else if (indices.length < this.dimension) {
+            console.log(indices);
+            const offset = indices.reduce((acc, curr, i) => acc + curr * this.strides[i], 0);
+            return new NDArray(this.shape.slice(indices.length), "float64", this.data.buffer, offset, this.strides.slice(indices.length));
+        } else {
+            throw `Error: Too many indices passed for array of dimension ${this.dimension}`;
+        }
     }
 
     set(value: number, ...indices: number[]) {
         if (indices.length !== this.dimension) {
-            throw `Error: Incorrect number of indices passed`;
+            throw `Error: Incorrect number of indices passed for array of dimension ${this.dimension}`;
         }
         this.data.setFloat64(this.strides.reduce((acc, curr, i) => acc + curr * indices[i], 0), value);
     }
