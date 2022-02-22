@@ -48,22 +48,21 @@ export class NDArray {
             get(target, prop) {
                 if (typeof prop === "string" && /\d+/.test(prop)) {
                     const axes = prop.split(",");
-                    if (axes.length <= target.dimension) {  // implement recursive definition instead of this?
-                        if (/:/.test(prop)) {
-                            const slices: (string | number)[][] = axes.map(ax => ax.split(":"));
-                            if (slices.every(slice => slice.length <= 3)) {
-                                for (let i=0; i<slices.length; i++) {
-                                    slices[i][0] = slices[i][0] === "" ? 0 : Number(slices[i][0]);
-                                    if (slices[i][0] && slices[i][1] === undefined) throw `Error: Extracting single subarray not supported yet`;
-                                    slices[i][1] = slices[i][1] === "" || slices[i][1] === undefined ? target.shape[i] : Number(slices[i][1]);
-                                    slices[i][2] = slices[i][2] === "" || slices[i][2] === undefined ? 1 : Number(slices[i][2]);
-                                }
-                                return target.slice(...slices as [number, number, number][]);
-                            }
-                        } else {
-                            const indices = axes.map(ax => Number(ax));
-                            return target.get(...indices);
+                    if (axes.some(ax => /:/.test(ax) || !/\d/.test(ax))) {
+                        const slices: string[][] = axes.map(ax => ax.split(":"));
+                        if (slices.every(slice => slice.length <= 3)) {
+                            const indices = slices.map((slice, i) => {
+                                return [
+                                    /\S/.test(slice[0]) ? Number(slice[0]) : 0,
+                                    slice[1] !== undefined && /\S/.test(slice[1]) ? Number(slice[1]) : /\S/.test(slice[0]) && slice[1] === undefined ? Number(slice[0]) + 1 : target.shape[i],
+                                    slice[2] !== undefined && /\S/.test(slice[2]) ? Number(slice[2]) : 1
+                                ];
+                            });
+                            return target.slice(...indices as [number, number, number][]);
                         }
+                    } else {
+                        const indices = axes.map(ax => Number(ax));
+                        return target.get(...indices);
                     }
                 }
                 return target[prop];
@@ -71,12 +70,9 @@ export class NDArray {
 
             set(target, prop, value) {
                 if (typeof prop === "string" && /\d+/.test(prop)) {
-                    const axes = prop.split(",");
-                    if (axes.length <= target.dimension) {
-                        const indices = axes.map(ax => Number(ax));
-                        target.set(value, ...indices);
-                        return true;
-                    }
+                    const indices = prop.split(",").map(ax => Number(ax));
+                    target.set(value, ...indices);
+                    return true;
                 }
                 return false;
             }
@@ -87,7 +83,6 @@ export class NDArray {
         if (indices.length === this.dimension) {
             return this.data.getFloat64(this.strides.reduce((acc, curr, i) => acc + curr * indices[i], 0));
         } else if (indices.length < this.dimension) {
-            console.log(indices);
             const offset = indices.reduce((acc, curr, i) => acc + curr * this.strides[i], 0);
             return new NDArray(this.shape.slice(indices.length), "float64", this.data.buffer, offset, this.strides.slice(indices.length));
         } else {
@@ -103,6 +98,7 @@ export class NDArray {
     }
 
     slice(...axes: [number, number, number][]): NDArray {  // [start, end, step]
+        if (axes.length > this.dimension) throw `Error: Too many slices passed for array of dimension ${this.dimension}`;
 
         // check that passed indices are valid
         axes.forEach((ax, i) => {
@@ -110,7 +106,7 @@ export class NDArray {
             if (ax[0] < 0) ax[0] += this.shape[i];
             if (ax[1] < 0) ax[1] += this.shape[i];
             if (!(ax[0] < this.shape[i] && ax[1] <= this.shape[i])) throw `Error: Index out of bounds`;
-            if (ax[1] <= ax[0]) throw `Error: stop index cannot be higher than or equal to start index`;
+            if (ax[1] <= ax[0]) throw `Error: stop index cannot be lower than or equal to start index`;
             if (ax[2] === 0) throw `Error: step cannot be 0`;
             if (ax[2] < 0) throw `Error: Negative step not currently supported`;
         });
@@ -129,9 +125,14 @@ export class NDArray {
         }
 
         // set initial offset
-        const offset = axes.reduce((acc, curr, i) => {
+        const offset = this.data.byteOffset + axes.reduce((acc, curr, i) => {
             return acc + (curr[0] * this.strides[i]);
         }, 0);
+
+        if (shape[0] === 1) {
+            shape.shift();
+            strides.shift();
+        }
 
         // return view
         return new NDArray(shape, "float64", this.data.buffer, offset, strides);
