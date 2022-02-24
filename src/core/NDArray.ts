@@ -79,6 +79,23 @@ export class NDArray {
         });
     }
 
+    *[Symbol.iterator]() {
+        function* iterate(this: NDArray, axis: number, ...indices: number[]): Generator {
+            if (axis === this.shape.length - 1) {
+                for (let i=0; i<this.shape[axis]; i++) {
+                    yield this.get(...indices, i);
+                }
+            } else {
+                indices.push(0);
+                for (let i=0; i<this.shape[axis]; i++) {
+                    yield* iterate.call(this,axis + 1, ...indices);
+                    indices[axis] += 1;
+                }
+            }
+        }
+        yield* iterate.call(this,0);
+    }
+
     get(...indices: number[]): number | NDArray {
         if (indices.length === this.dimension) {
             return this.data.getFloat64(this.strides.reduce((acc, curr, i) => acc + curr * indices[i], 0));
