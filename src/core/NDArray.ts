@@ -155,10 +155,6 @@ export class NDArray {
         return new NDArray(shape, "float64", this.data.buffer, offset, strides);
     }
 
-    transpose() {
-        return new NDArray(this.shape.reverse(), "float64", this.data.buffer, 0, this.strides.reverse());
-    }
-
     toString(): string {
         const currentIndex = new Array(this.dimension);  // keeps track of indices that have been written
         currentIndex.fill(0);
