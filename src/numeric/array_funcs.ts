@@ -46,3 +46,20 @@ export function array(array: nestedArray): NDArray {
         throw `Error: Creating NDArray from jagged array not supported.`;
     }
 }
+
+export function arange(stop: number): NDArray
+export function arange(start: number, stop: number, step?: number): NDArray
+export function arange(startOrStop: number, stop?: number, step?: number): NDArray {
+    const start = stop === undefined ? 0 : startOrStop;
+    stop = stop === undefined ? startOrStop : stop;
+    step = step === undefined ? 1 : step;
+    // step = dtype(start + step) - dtype(start)
+    const length = Math.ceil((stop - start) / step);
+    const array = new NDArray([length], "float64");
+    let value = start;
+    for (let i=0; i < length; i++) {
+        array.set(value, i);
+        value += step;
+    }
+    return array;
+}
