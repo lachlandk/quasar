@@ -182,4 +182,21 @@ export class NDArray {
         }
         return arrayToString(0);
     }
+
+    forEach(callback: (element: number, indices: number[], array: NDArray) => void): void {
+        const iterate = (axis: number, ...indices: number[]) => {
+            if (axis === this.shape.length - 1) {
+                for (let i = 0; i < this.shape[axis]; i++) {
+                    callback(this.get(...indices, i) as number, [...indices, i], this);
+                }
+            } else {
+                indices.push(0);
+                for (let i = 0; i < this.shape[axis]; i++) {
+                    iterate(axis + 1, ...indices);
+                    indices[axis] += 1;
+                }
+            }
+        }
+        iterate(0);
+    }
 }
