@@ -32,3 +32,15 @@ export const mod: (x1: NDArray, x2: NDArray) => NDArray = UFunc(function mod(x1:
 export const reciprocal: (x1: NDArray) => NDArray = UFunc(function reciprocal(x1: number) {
     return 1 / x1;
 });
+
+export const round: (x1: NDArray) => NDArray = UFunc(function round(x1: number) {
+    return Math.round(x1);
+});
+
+export const ceil: (x1: NDArray) => NDArray = UFunc(function ceil(x1: number) {
+    return Math.ceil(x1);
+});
+
+export const floor: (x1: NDArray) => NDArray = UFunc(function floor(x1: number) {
+    return Math.floor(x1);
+});
