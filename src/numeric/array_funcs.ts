@@ -49,7 +49,7 @@ export function array(array: nestedArray): NDArray {
 
 export function arange(stop: number): NDArray
 export function arange(start: number, stop: number, step?: number): NDArray
-export function arange(startOrStop: number, stop?: number, step?: number): NDArray {
+export function arange(startOrStop: number, stop?: number, step?: number) {
     const start = stop === undefined ? 0 : startOrStop;
     stop = stop === undefined ? startOrStop : stop;
     step = step === undefined ? 1 : step;
@@ -58,6 +58,18 @@ export function arange(startOrStop: number, stop?: number, step?: number): NDArr
     const array = new NDArray([length], "float64");
     let value = start;
     for (let i=0; i < length; i++) {
+        array.set(value, i);
+        value += step;
+    }
+    return array;
+}
+
+export function linspace(start: number, stop: number, num: number = 50) {
+    // TODO: update this to use the NumPy algorithm once broadcasting is implemented
+    const array = new NDArray([num], "float64");
+    const step = (stop - start) / (num - 1);
+    let value = start;
+    for (let i=0; i < num; i++) {
         array.set(value, i);
         value += step;
     }
