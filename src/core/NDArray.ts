@@ -44,7 +44,7 @@ export class NDArray {
             this.strides = strides;
         }
 
-        return new Proxy(this, {
+        return new Proxy(this, {  // TODO: return types for this aren't working
             get(target, prop) {
                 if (typeof prop === "string" && /\d+/.test(prop)) {
                     const axes = prop.split(",");
@@ -97,6 +97,9 @@ export class NDArray {
     }
 
     get(...indices: number[]): number | NDArray {
+        for (let i=0; i<this.dimension; i++) {
+            if (indices[i] >= this.shape[i]) throw `Error: Index value ${indices[i]} is out of bounds for axis ${i} with size ${this.shape[i]}`;
+        }
         if (indices.length === this.dimension) {
             return this.data.getFloat64(this.strides.reduce((acc, curr, i) => acc + curr * indices[i], 0));
         } else if (indices.length < this.dimension) {
@@ -111,38 +114,41 @@ export class NDArray {
         if (indices.length !== this.dimension) {
             throw `Error: Incorrect number of indices passed for array of dimension ${this.dimension}`;
         }
+        for (let i=0; i<this.dimension; i++) {
+            if (indices[i] >= this.shape[i]) throw `Error: Index value ${indices[i]} is out of bounds for axis ${i} with size ${this.shape[i]}`;
+        }
         this.data.setFloat64(this.strides.reduce((acc, curr, i) => acc + curr * indices[i], 0), value);
     }
 
-    slice(...axes: [number, number, number][]): NDArray {  // [start, end, step]
-        if (axes.length > this.dimension) throw `Error: Too many slices passed for array of dimension ${this.dimension}`;
+    slice(...slices: [number, number, number][]): NDArray {  // [start, end, step]
+        if (slices.length > this.dimension) throw `Error: Too many slices passed for array of dimension ${this.dimension}`;
 
         // check that passed indices are valid
-        axes.forEach((ax, i) => {
+        slices.forEach((ax, i) => {
             if (!(Number.isInteger(ax[0]) && Number.isInteger(ax[1]) && Number.isInteger(ax[2]))) throw `Error: Indices must be integers`;
             if (ax[0] < 0) ax[0] += this.shape[i];
             if (ax[1] < 0) ax[1] += this.shape[i];
             if (!(ax[0] < this.shape[i] && ax[1] <= this.shape[i])) throw `Error: Index out of bounds`;
             if (ax[1] <= ax[0]) throw `Error: stop index cannot be lower than or equal to start index`;
             if (ax[2] === 0) throw `Error: step cannot be 0`;
-            if (ax[2] < 0) throw `Error: Negative step not currently supported`;
+            if (ax[2] < 0) throw `Error: Negative step not currently supported`;  // TODO: allow negative step
         });
 
-        // pad out axes list
-        for (let i=axes.length; i<this.shape.length; i++) {
-            axes.push([0, this.shape[i], 1]);
+        // pad out slices list
+        for (let i=slices.length; i<this.shape.length; i++) {
+            slices.push([0, this.shape[i], 1]);
         }
 
         // set shape and strides
         const shape = [...this.shape];
         const strides = [...this.strides];  // strides don't change unless step is different
         for (let i=0; i<strides.length; i++) {
-            strides[i] *= axes[i][2];
-            shape[i] = Math.ceil((axes[i][1] - axes[i][0]) / (axes[i][2]));
+            strides[i] *= slices[i][2];
+            shape[i] = Math.ceil((slices[i][1] - slices[i][0]) / (slices[i][2]));
         }
 
         // set initial offset
-        const offset = this.data.byteOffset + axes.reduce((acc, curr, i) => {
+        const offset = this.data.byteOffset + slices.reduce((acc, curr, i) => {
             return acc + (curr[0] * this.strides[i]);
         }, 0);
 
