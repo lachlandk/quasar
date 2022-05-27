@@ -4,12 +4,19 @@
         "module": "ES6",
         "moduleResolution": "Node",
         "declaration": true,
+        "declarationDir": "build/types",
+        "outDir": "build/quasar",
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true
     },
+    "include": [
+        "src/**/*.ts"
+    ],
     "exclude": [
-		"node_modules"
-	]
+        "src/symbolic",
+        "src/functions",
+        "src/core/errors.ts",
+    ]
 }

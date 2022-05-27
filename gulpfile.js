@@ -1,9 +1,9 @@
 import gulp from "gulp";
 import del from "del";
-import typescriptGulp from "gulp-typescript";
+// import typescriptGulp from "gulp-typescript";
 import typescriptRollup from "rollup-plugin-typescript2";
 import { rollup } from "rollup";
-import merge from "merge2";
+// import merge from "merge2";
 import typedoc from "gulp-typedoc";
 import strip from "gulp-strip-comments";
 import terser from "gulp-terser";
@@ -13,16 +13,16 @@ function cleanBuild() {
 	return del(["build/**"]);
 }
 
-async function buildES() {
-	const result = gulp.src("src/**/*.ts")
-		.pipe(typescriptGulp.createProject("tsconfig.json", {
-			declaration: true
-		})());
-	return merge([
-		result.dts.pipe(gulp.dest("build/types")),
-		result.js.pipe(gulp.dest("build/quasar"))
-	]);
-}
+// async function buildES() {
+// 	const result = gulp.src("src/**/*.ts")
+// 		.pipe(typescriptGulp.createProject("tsconfig.json", {
+// 			declaration: true
+// 		})());
+// 	return merge([
+// 		result.dts.pipe(gulp.dest("build/types")),
+// 		result.js.pipe(gulp.dest("build/quasar"))
+// 	]);
+// }
 
 function buildIIFE() {
 	return rollup({
@@ -45,11 +45,11 @@ function buildIIFE() {
 	}));
 }
 
-export const build = gulp.series(cleanBuild, buildES, buildIIFE);
+// export const build = gulp.series(cleanBuild, buildES, buildIIFE);
 
-export function watch() {
-	return gulp.watch("src/**/*.ts", build);
-}
+// export function watch() {
+// 	return gulp.watch("src/**/*.ts", build);
+// }
 
 function cleanDist() {
 	return del(["dist/**"]);
