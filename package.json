@@ -31,7 +31,8 @@
   },
   "scripts": {
     "build": "tsc --build --clean && tsc",
-
+    "watch": "tsc --build --clean && tsc --watch",
+    "dist": "tsc --build --clean && tsc --declarationDir dist/types --outDir dist/quasar",
     "test": "c8 mocha \"./tests/**/*.js\""
   },
   "c8": {
