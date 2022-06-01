@@ -16,7 +16,6 @@
     ],
     "exclude": [
         "src/symbolic",
-        "src/functions",
         "src/core/errors.ts",
     ]
 }
