@@ -10,10 +10,7 @@ import {
 	divide,
 	power,
 	mod,
-	reciprocal,
-	round,
-	ceil,
-	floor
+	reciprocal
 } from "../../build/quasar/index.js";
 
 suite("NDArray arithmetic operations", function() {
@@ -78,23 +75,5 @@ suite("NDArray arithmetic operations", function() {
 		const x1 = array([2, 3, 4]);
 		const inverse = reciprocal(x1);
 		expect(getElements(inverse)).to.deep.equal([1/2, 1/3, 1/4]);
-	});
-
-	test("round function rounds array element-wise", function() {
-		const x1 = array([1.4, 2.5, 3.6]);
-		const rounded = round(x1);
-		expect(getElements(rounded)).to.deep.equal([1, 3, 4]);
-	});
-
-	test("ceil function applies ceiling function to array element-wise", function() {
-		const x1 = array([1.4, 2.5, 3.6]);
-		const ceiling = ceil(x1);
-		expect(getElements(ceiling)).to.deep.equal([2, 3, 4]);
-	});
-
-	test("floor function applies floor function to array element-wise", function() {
-		const x1 = array([1.4, 2.5, 3.6]);
-		const floored = floor(x1);
-		expect(getElements(floored)).to.deep.equal([1, 2, 3]);
 	});
 });

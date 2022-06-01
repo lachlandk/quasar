@@ -23,3 +23,15 @@ export const max: (x1: NDArray, x2: NDArray) => NDArray = UFunc(function max(x1:
 export const min: (x1: NDArray, x2: NDArray) => NDArray = UFunc(function min(x1: number, x2: number) {
     return Math.min(x1, x2);
 });
+
+export const round: (x1: NDArray) => NDArray = UFunc(function round(x1: number) {
+    return Math.round(x1);
+});
+
+export const ceil: (x1: NDArray) => NDArray = UFunc(function ceil(x1: number) {
+    return Math.ceil(x1);
+});
+
+export const floor: (x1: NDArray) => NDArray = UFunc(function floor(x1: number) {
+    return Math.floor(x1);
+});
