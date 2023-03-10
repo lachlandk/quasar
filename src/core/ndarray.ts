@@ -1,6 +1,8 @@
+import { IndexError, ValueError } from "./errors.js";
+
 type dtype = "float64"
 
-export class NDArray {
+export class ndarray {
     [key: string | symbol]: unknown;
 
     data: DataView
@@ -21,9 +23,9 @@ export class NDArray {
         this.dtype = dtype;
         this.itemSize = 8;  // float64
 
-        if (!shape.every(size => Number.isInteger(size))) throw `Error: Size of array dimensions must be integer`;  // TODO: proper errors
-        if (Array.isArray(strides) && !strides.every(stride => Number.isInteger(stride / this.itemSize))) throw `Error: Size of array strides must be integer multiple of itemSize`;
-        if (!Number.isInteger(offset / this.itemSize)) throw `Error: Array offset must be multiple of itemSize`;
+        if (!shape.every(size => Number.isInteger(size))) throw new ValueError("Size of array dimensions are not integers", shape);
+        if (Array.isArray(strides) && !strides.every(stride => Number.isInteger(stride / this.itemSize))) throw new ValueError("Size of array strides are not integer multiples of itemSize", strides);
+        if (!Number.isInteger(offset / this.itemSize)) throw new ValueError("Array offset is not multiple of itemSize", offset);
 
         // calculate data size and dimension
         this.shape = shape;
@@ -80,7 +82,7 @@ export class NDArray {
     }
 
     *[Symbol.iterator]() {
-        function* iterate(this: NDArray, axis: number, ...indices: number[]): Generator {
+        function* iterate(this: ndarray, axis: number, ...indices: number[]): Generator {
             if (axis === this.shape.length - 1) {
                 for (let i=0; i<this.shape[axis]; i++) {
                     yield this.get(...indices, i);
@@ -96,42 +98,43 @@ export class NDArray {
         yield* iterate.call(this,0);
     }
 
-    get(...indices: number[]): number | NDArray {
+    get(...indices: number[]): number | ndarray {
         for (let i=0; i<this.dimension; i++) {
-            if (indices[i] >= this.shape[i]) throw `Error: Index value ${indices[i]} is out of bounds for axis ${i} with size ${this.shape[i]}`;
+            if (indices[i] >= this.shape[i]) throw new IndexError(indices[i], i, this.shape[i]);
         }
         if (indices.length === this.dimension) {
             return this.data.getFloat64(this.strides.reduce((acc, curr, i) => acc + curr * indices[i], 0));
         } else if (indices.length < this.dimension) {
             const offset = indices.reduce((acc, curr, i) => acc + curr * this.strides[i], 0);
-            return new NDArray(this.shape.slice(indices.length), "float64", this.data.buffer, offset, this.strides.slice(indices.length));
+            return new ndarray(this.shape.slice(indices.length), "float64", this.data.buffer, offset, this.strides.slice(indices.length));
         } else {
-            throw `Error: Too many indices passed for array of dimension ${this.dimension}`;
+            throw new ValueError(`Too many indices passed for array of dimension ${this.dimension}`, indices.length);
         }
     }
 
     set(value: number, ...indices: number[]) {
         if (indices.length !== this.dimension) {
-            throw `Error: Incorrect number of indices passed for array of dimension ${this.dimension}`;
+            throw new ValueError(`Incorrect number of indices passed for array of dimension ${this.dimension}`, indices.length);
         }
         for (let i=0; i<this.dimension; i++) {
-            if (indices[i] >= this.shape[i]) throw `Error: Index value ${indices[i]} is out of bounds for axis ${i} with size ${this.shape[i]}`;
+            if (indices[i] >= this.shape[i]) throw new IndexError(indices[i], i, this.shape[i]);
         }
         this.data.setFloat64(this.strides.reduce((acc, curr, i) => acc + curr * indices[i], 0), value);
     }
 
-    slice(...slices: [number, number, number][]): NDArray {  // [start, end, step]
-        if (slices.length > this.dimension) throw `Error: Too many slices passed for array of dimension ${this.dimension}`;
+    slice(...slices: [number, number, number][]): ndarray {  // [start, end, step]
+        if (slices.length > this.dimension) throw new ValueError(`Too many slices passed for array of dimension ${this.dimension}`, slices.length);
 
         // check that passed indices are valid
         slices.forEach((ax, i) => {
-            if (!(Number.isInteger(ax[0]) && Number.isInteger(ax[1]) && Number.isInteger(ax[2]))) throw `Error: Indices must be integers`;
+            if (!(Number.isInteger(ax[0]) && Number.isInteger(ax[1]) && Number.isInteger(ax[2]))) throw new ValueError("Indices must be integers", ax);
             if (ax[0] < 0) ax[0] += this.shape[i];
             if (ax[1] < 0) ax[1] += this.shape[i];
-            if (!(ax[0] < this.shape[i] && ax[1] <= this.shape[i])) throw `Error: Index out of bounds`;
-            if (ax[1] <= ax[0]) throw `Error: stop index cannot be lower than or equal to start index`;
-            if (ax[2] === 0) throw `Error: step cannot be 0`;
-            if (ax[2] < 0) throw `Error: Negative step not currently supported`;  // TODO: allow negative step
+            if (ax[0] >= this.shape[i]) throw new IndexError(ax[0], i, this.shape[i]);
+            if (ax[1] >= this.shape[i]) throw new IndexError(ax[1], i, this.shape[i]);
+            if (ax[1] <= ax[0]) throw new ValueError(`Stop index cannot be lower than or equal to start index ${ax[0]}`, ax[1]);
+            if (ax[2] === 0) throw new ValueError("Step cannot be 0", ax[2]);
+            if (ax[2] < 0) throw new ValueError("Negative step not currently supported", ax[2]);  // TODO: allow negative step
         });
 
         // pad out slices list
@@ -158,7 +161,7 @@ export class NDArray {
         }
 
         // return view
-        return new NDArray(shape, "float64", this.data.buffer, offset, strides);
+        return new ndarray(shape, "float64", this.data.buffer, offset, strides);
     }
 
     toString(): string {
@@ -189,7 +192,7 @@ export class NDArray {
         return arrayToString(0);
     }
 
-    forEach(callback: (element: number, indices: number[], array: NDArray) => void): void {
+    forEach(callback: (element: number, indices: number[], array: ndarray) => void): void {
         const iterate = (axis: number, ...indices: number[]) => {
             if (axis === this.shape.length - 1) {
                 for (let i = 0; i < this.shape[axis]; i++) {

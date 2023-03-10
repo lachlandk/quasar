@@ -5,7 +5,7 @@ import { array, arange, linspace } from "../../build/quasar/index.js";
 
 suite("Array creation function", function() {
 
-	test("Nested array is converted to NDArray correctly", function() {
+	test("Nested array is converted to ndarray correctly", function() {
 		const arr = array([[1, 2, 3], [4, 5, 6]]);
 		expect(arr.shape).to.deep.equal([2, 3]);
 		expect(arr[0][0]).to.equal(1);

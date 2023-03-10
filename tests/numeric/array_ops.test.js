@@ -13,7 +13,7 @@ import {
 	reciprocal
 } from "../../build/quasar/index.js";
 
-suite("NDArray arithmetic operations", function() {
+suite("ndarray arithmetic operations", function() {
 	function getElements(array) {
 		const elements = [];
 		for (const element of array) {

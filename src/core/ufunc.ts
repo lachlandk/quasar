@@ -1,9 +1,9 @@
-import { NDArray } from "./NDArray.js";
+import { ndarray } from "./ndarray";
 
-export const UFunc = function UFunc(func: Function) {
-    return function (...arrays: NDArray[]): NDArray {
+export const ufunc = function UFunc(func: Function) {
+    return function (...arrays: ndarray[]): ndarray {
         // assuming input arrays are the same shape
-        const output = new NDArray(arrays[0].shape);
+        const output = new ndarray(arrays[0].shape);
 
         function iterate(axis: number, ...indices: number[]): void {
             if (axis === output.shape.length - 1) {

@@ -3,7 +3,7 @@ import { expect } from "chai";
 
 import { NDArray } from "../../build/quasar/index.js";
 
-suite("NDArray constructor", function() {
+suite("ndarray constructor", function() {
 
 	const array = new NDArray([2, 3]);
 
@@ -38,7 +38,7 @@ suite("NDArray constructor", function() {
 	});
 });
 
-suite("NDArray.get() method", function() {
+suite("ndarray.get() method", function() {
 
 	const array = new NDArray([2, 3]);
 	array.data.setFloat64(0, 1);
@@ -71,7 +71,7 @@ suite("NDArray.get() method", function() {
 	});
 });
 
-suite("NDArray.set() method", function() {
+suite("ndarray.set() method", function() {
 
 	const array = new NDArray([2, 3]);
 
@@ -91,7 +91,7 @@ suite("NDArray.set() method", function() {
 	});
 });
 
-suite("NDArray.slice() method", function() {
+suite("ndarray.slice() method", function() {
 
 	const array = new NDArray([4, 6]);
 
@@ -136,7 +136,7 @@ suite("NDArray.slice() method", function() {
 	});
 });
 
-suite("NDArray.toString() method", function() {
+suite("ndarray.toString() method", function() {
 
 	test("1D array is formatted correctly", function() {
 		const array = new NDArray([4]);
@@ -149,7 +149,7 @@ suite("NDArray.toString() method", function() {
 	});
 });
 
-suite("NDArray iteration", function() {
+suite("ndarray iteration", function() {
 
 	const array = new NDArray([2, 2]);
 	array.data.setFloat64(0, 1);
@@ -177,7 +177,7 @@ suite("NDArray iteration", function() {
 	});
 });
 
-suite("NDArray indexing", function() {
+suite("ndarray indexing", function() {
 
 	const array = new NDArray([4, 6]);
 	array.data.setFloat64(2 * 6 * array.itemSize + 2 * array.itemSize, 10);

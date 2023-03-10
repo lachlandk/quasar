@@ -1,10 +1,10 @@
-import { NDArray } from "../../core/index.js";
+import { ndarray } from "../core/index.js";
 
 export function random(size?: number[]) {
     if (size === undefined) {
         return Math.random();
     } else {
-        const array = new NDArray(size);
+        const array = new ndarray(size);
         array.forEach(function (element, indices) {
             array.set(Math.random(), ...indices);
         });
@@ -19,7 +19,7 @@ export function uniform(min: number = 0, max: number = 1, size?: number[]) {
     if (size === undefined) {
         return Math.random() * (max - min) + min;
     } else {
-        const array = new NDArray(size);
+        const array = new ndarray(size);
         array.forEach(function (element, indices) {
             array.set(Math.random() * (max - min) + min, ...indices);
         });
@@ -27,14 +27,14 @@ export function uniform(min: number = 0, max: number = 1, size?: number[]) {
     }
 }
 
-// export function randint(max: number, size?: number[]): number | NDArray
-// export function randint(min: number, max: number, size?: number[]): number | NDArray
+// export function randint(max: number, size?: number[]): number | ndarray
+// export function randint(min: number, max: number, size?: number[]): number | ndarray
 // export function randint(minOrMax: number, maxOrSize?: number | number[], size?: number[]) {
 export function randint(min: number = 0, max: number = 1, size?: number[]) {
     if (size === undefined) {
         return Math.floor(Math.random() * (max - min) + min);
     } else {
-        const array = new NDArray(size);
+        const array = new ndarray(size);
         array.forEach(function (element, indices) {
             array.set(Math.floor(Math.random() * (max - min) + min), ...indices);
         });

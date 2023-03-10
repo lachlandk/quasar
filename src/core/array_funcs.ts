@@ -1,8 +1,8 @@
-import { NDArray } from "../core/index.js";
+import { ndarray } from "../core/index.js";
 
 type nestedArray = (number | nestedArray)[]
 
-export function array(array: nestedArray): NDArray {
+export function array(array: nestedArray): ndarray {
     const getDimensions = (array: unknown[]): number[] | false => {
         if (Array.isArray(array)) {
             const lengths = getDimensions(array[0]);
@@ -23,7 +23,7 @@ export function array(array: nestedArray): NDArray {
     }
     const dimensions = getDimensions(array);
     if (dimensions) {
-        const ndArray = new NDArray(dimensions, "float64");
+        const ndArray = new ndarray(dimensions, "float64");
         const flat = array.flat(dimensions.length);
         const copy = (axis: number, ...indices: number[]) => {
             if (axis === dimensions.length - 1) {
@@ -47,15 +47,15 @@ export function array(array: nestedArray): NDArray {
     }
 }
 
-export function arange(stop: number): NDArray
-export function arange(start: number, stop: number, step?: number): NDArray
+export function arange(stop: number): ndarray
+export function arange(start: number, stop: number, step?: number): ndarray
 export function arange(startOrStop: number, stop?: number, step?: number) {
     const start = stop === undefined ? 0 : startOrStop;
     stop = stop === undefined ? startOrStop : stop;
     step = step === undefined ? 1 : step;
     // step = dtype(start + step) - dtype(start)
     const length = Math.ceil((stop - start) / step);
-    const array = new NDArray([length], "float64");
+    const array = new ndarray([length], "float64");
     let value = start;
     for (let i=0; i < length; i++) {
         array.set(value, i);
@@ -66,7 +66,7 @@ export function arange(startOrStop: number, stop?: number, step?: number) {
 
 export function linspace(start: number, stop: number, num: number = 50) {
     // TODO: update this to use the NumPy algorithm once broadcasting is implemented
-    const array = new NDArray([num], "float64");
+    const array = new ndarray([num], "float64");
     const step = (stop - start) / (num - 1);
     let value = start;
     for (let i=0; i < num; i++) {
